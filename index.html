@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pocket Buddy - 生活リズムを整えるルナ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&family=Fredoka:wght@500&display=swap');
+        
+        :root {
+            --bg-morning: linear-gradient(180deg, #ffafbd 0%, #ffc3a0 100%);
+            --bg-daytime: linear-gradient(180deg, #4facfe 0%, #00f2fe 100%);
+            --bg-evening: linear-gradient(180deg, #fa709a 0%, #fee140 100%);
+            --bg-night: linear-gradient(180deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            --bar-egg: linear-gradient(90deg, #cbd5e1 0%, #f8fafc 100%);
+            --bar-chick: linear-gradient(90deg, #fbbf24 0%, #fef3c7 100%);
+            --bar-chicken: linear-gradient(90deg, #ef4444 0%, #fca5a5 100%);
+        }
+
+        body {
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 2s ease;
+            color: #5a5a5a;
+            overflow-x: hidden;
+            touch-action: manipulation;
+        }
+
+        .mode-morning { background: var(--bg-morning); }
+        .mode-daytime { background: var(--bg-daytime); }
+        .mode-evening { background: var(--bg-evening); }
+        .mode-night { background: var(--bg-night); color: #ecf0f1; }
+
+        .app-logo {
+            font-family: 'Fredoka', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            padding-left: 4px;
+        }
+        .logo-icon {
+            width: 24px;
+            height: 24px;
+            background: #fbbf24;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+        }
+        .mode-night .logo-icon { background: #6366f1; }
+
+        .card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border-radius: 32px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.5s ease;
+        }
+
+        .mode-night .card {
+            background: rgba(30, 41, 59, 0.7);
+            border-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .pet-sprite {
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            user-select: none;
+            display: inline-block;
+            position: relative;
+            z-index: 10;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .mission-item {
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 18px;
+            padding: 12px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #334155;
+        }
+
+        .mode-night .mission-item { background: rgba(255, 255, 255, 0.1); color: #f1f5f9; }
+
+        .mission-item.completed {
+            opacity: 0.6;
+            background: rgba(34, 197, 94, 0.1);
+            text-decoration: line-through;
+        }
+
+        .particle {
+            position: fixed;
+            pointer-events: none;
+            font-size: 24px;
+            z-index: 9999;
+            animation: particleOut 0.8s ease-out forwards;
+        }
+
+        @keyframes particleOut {
+            0% { transform: translate(0, 0) scale(0.5) rotate(0deg); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(1.2) rotate(var(--tr)); opacity: 0; }
+        }
+
+        @keyframes jump { 
+            0%, 100% { transform: scale(var(--base-scale)) translateY(0); } 
+            50% { transform: scale(var(--base-scale)) translateY(-40px); } 
+        }
+        .jump-anim { animation: jump 0.4s ease-out !important; }
+
+        @keyframes spin-jump {
+            0% { transform: scale(var(--base-scale)) translateY(0) rotate(0deg); }
+            50% { transform: scale(calc(var(--base-scale) * 1.2)) translateY(-60px) rotate(180deg); }
+            100% { transform: scale(var(--base-scale)) translateY(0) rotate(360deg); }
+        }
+        .spin-anim { animation: spin-jump 0.6s cubic-bezier(0.4, 0, 0.2, 1) !important; }
+        
+        .floating { animation: float 4s ease-in-out infinite; }
+        @keyframes float { 
+            0%, 100% { transform: scale(var(--base-scale)) translateY(0); } 
+            50% { transform: scale(var(--base-scale)) translateY(-10px); } 
+        }
+
+        .growth-bar-bg {
+            height: 10px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 999px;
+            margin-top: 8px;
+            overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.05);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        #growth-fill {
+            height: 100%;
+            width: 0%;
+            transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 999px;
+        }
+
+        .stage-egg #growth-fill { background: var(--bar-egg); box-shadow: 0 0 8px rgba(255,255,255,0.6); }
+        .stage-chick #growth-fill { background: var(--bar-chick); box-shadow: 0 0 10px rgba(251,191,36,0.3); }
+        .stage-chicken #growth-fill { background: var(--bar-chicken); box-shadow: 0 0 10px rgba(239,68,68,0.3); }
+
+        .achievement-grid-item {
+            padding: 12px;
+            background: #ffffff;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 4px;
+            border: 2px solid #f1f5f9;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            color: #1e293b;
+            transition: all 0.3s ease;
+        }
+
+        .achievement-grid-item.unlocked { border-color: #fbbf24; background: #fffbeb; }
+        .achievement-grid-item.locked { opacity: 0.5; background: #f8fafc; filter: grayscale(1); }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 500;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+
+        .analog-clock-container { position: fixed; top: 20px; left: 20px; width: 60px; height: 60px; z-index: 50; }
+        .analog-clock { width: 100%; height: 100%; border-radius: 50%; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(4px); position: relative; border: 2px solid rgba(255, 255, 255, 0.4); }
+        .hand { position: absolute; bottom: 50%; left: 50%; transform-origin: bottom; background: white; border-radius: 4px; z-index: 20; }
+        .hour-hand { width: 3px; height: 15px; margin-left: -1.5px; }
+        .min-hand { width: 2px; height: 22px; margin-left: -1px; }
+
+        .clock-marks-container {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .clock-mark {
+            position: absolute;
+            top: 2px; 
+            left: calc(50% - 1px);
+            width: 2px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.7);
+            transform-origin: 1px 26px;
+        }
+
+        .friendship-bar { height: 4px; background: rgba(0,0,0,0.05); border-radius: 2px; margin-top: 4px; overflow: hidden; }
+        .friendship-fill { height: 100%; background: #f472b6; transition: width 0.5s ease; }
+
+        .streak-counter {
+            background: rgba(255, 255, 255, 0.4);
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .mode-night .streak-counter { background: rgba(0, 0, 0, 0.3); }
+        
+        @keyframes bounce-subtle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+        .animate-bounce-subtle { animation: bounce-subtle 2s infinite ease-in-out; }
+
+        /* Separate Audio Controls UI */
+        .audio-controls-group {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .audio-trigger {
+            width: 44px;
+            height: 44px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(4px);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            font-size: 1.1rem;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .audio-trigger:active { transform: scale(0.9); }
+        .audio-trigger.active { background: rgba(255, 255, 255, 0.4); }
+
+        .volume-panel-mini {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 12px;
+            border-radius: 18px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            width: 140px;
+            display: none;
+            position: absolute;
+            top: 55px;
+            right: 0;
+            z-index: 110;
+            color: #334155;
+            text-align: left;
+        }
+        .volume-panel-mini.active { display: block; }
+        .mode-night .volume-panel-mini { background: rgba(30, 41, 59, 0.95); color: white; }
+
+        .slider-group-mini label { display: block; font-size: 9px; font-weight: bold; opacity: 0.6; margin-bottom: 5px; text-transform: uppercase; }
+        .slider-group-mini input[type=range] { width: 100%; accent-color: #fbbf24; }
+    </style>
+</head>
+<body class="p-4 mode-daytime">
+
+    <div id="achievement-popup" class="fixed top-10 left-1/2 -translate-x-1/2 -translate-y-[100px] opacity-0 z-[1000] pointer-events-none transition-all duration-500 bg-white border-2 border-yellow-400 rounded-2xl shadow-xl px-6 py-4 flex items-center gap-4">
+        <div class="text-3xl" id="pop-icon">🏅</div>
+        <div>
+            <div class="text-[10px] font-bold text-yellow-600 uppercase tracking-widest">Achievement Unlocked!</div>
+            <div class="font-bold text-sm text-slate-800" id="pop-title">実績名</div>
+        </div>
+    </div>
+
+    <div class="analog-clock-container">
+        <div class="analog-clock">
+            <div class="clock-marks-container" id="analog-clock-marks"></div>
+            <div id="hour-hand" class="hand hour-hand"></div>
+            <div id="min-hand" class="hand min-hand"></div>
+        </div>
+    </div>
+
+    <!-- Separate Audio Settings Buttons -->
+    <div class="audio-controls-group">
+        <!-- BGM Control -->
+        <div class="audio-trigger" id="bgm-trigger" onclick="toggleVolumePanel(event, 'bgm')">
+            <i class="fas fa-music"></i>
+            <div id="bgm-panel" class="volume-panel-mini" onclick="event.stopPropagation()">
+                <div class="slider-group-mini">
+                    <label>BGM Volume</label>
+                    <input type="range" id="bgm-volume" min="0" max="100" step="1" oninput="updateVolume('bgm')">
+                </div>
+            </div>
+        </div>
+        <!-- SE Control -->
+        <div class="audio-trigger" id="se-trigger" onclick="toggleVolumePanel(event, 'se')">
+            <i class="fas fa-bolt"></i>
+            <div id="se-panel" class="volume-panel-mini" onclick="event.stopPropagation()">
+                <div class="slider-group-mini">
+                    <label>SE Volume</label>
+                    <input type="range" id="se-volume" min="0" max="100" step="1" oninput="updateVolume('se')">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-md w-full relative z-10 space-y-4" id="app-container">
+        <div class="app-logo">
+            <div class="logo-icon"><i class="fa-solid fa-egg"></i></div>
+            <span class="app-name">Pocket Buddy</span>
+        </div>
+
+        <div class="card p-5" id="stats-card">
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 bg-white/40 rounded-2xl flex items-center justify-center text-3xl shadow-sm border border-white/20" id="status-icon">🥚</div>
+                <div class="flex-1">
+                    <div class="flex justify-between items-start">
+                        <div class="flex items-center gap-1 group cursor-pointer" onclick="openNameModal()">
+                            <h1 class="text-lg font-bold" id="pet-name">ルナ</h1>
+                            <i class="fa-solid fa-pen text-[10px] opacity-30"></i>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] font-bold opacity-60 block">Lv.<span id="level-display">1</span> / なかよし Lv.<span id="friend-level">1</span></span>
+                            <span id="pet-traits-detail" class="text-[8px] font-bold px-1.5 py-0.5 rounded bg-black/5 opacity-50">...</span>
+                        </div>
+                    </div>
+                    <div class="growth-bar-bg"><div id="growth-fill"></div></div>
+                    <div class="friendship-bar"><div id="friendship-fill" class="friendship-fill" style="width: 0%"></div></div>
+                    <p class="text-[9px] mt-1 opacity-40 text-right"><span id="growth-status">成長中...</span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card p-6 text-center relative">
+            <div class="h-[180px] flex items-center justify-center">
+                <div id="pet-container" class="relative">
+                    <div id="pet" class="pet-sprite floating text-[80px]" onclick="onPetTap(event)" style="--base-scale: 1;">🥚</div>
+                </div>
+            </div>
+            <div class="bg-white/20 rounded-2xl p-3 mx-4">
+                <p id="pet-message" class="text-xs font-bold opacity-70">のんびり、いこうね</p>
+                <p id="fortune-text" class="text-[10px] mt-1 opacity-50 italic"></p>
+            </div>
+            <button onclick="toggleModal('achievement-modal')" class="absolute top-4 right-4 bg-white/50 p-2 rounded-full shadow-sm hover:bg-white transition">
+                <span class="text-xl">🏅</span>
+            </button>
+        </div>
+
+        <div class="card p-6">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <h3 class="font-bold text-sm tracking-widest" id="period-display">MISSIONS</h3>
+                    <span id="timer-display" class="text-[10px] font-mono opacity-50">00:00:00</span>
+                </div>
+                <span id="period-tag" class="text-[10px] px-2 py-1 rounded-full bg-white/40 font-bold uppercase">Wait</span>
+            </div>
+            <div id="mission-list" class="space-y-2"></div>
+            <div class="mt-6 pt-4 border-t border-black/5">
+                <h4 class="text-[10px] font-bold opacity-40 uppercase mb-3">Daily Challenges</h4>
+                <div id="daily-list" class="space-y-2"></div>
+            </div>
+        </div>
+
+        <div class="card p-5">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="font-bold text-[10px] opacity-60 uppercase">Archive</h3>
+                <div class="streak-counter">
+                    <span id="streak-num">1</span>日継続中 <span class="animate-bounce-subtle">🎁</span>
+                </div>
+            </div>
+            <div id="archive-list" class="flex gap-4 overflow-x-auto pb-2"></div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="achievement-modal" class="modal-overlay" onclick="closeOnOverlay(event, 'achievement-modal')">
+        <div class="card p-6 w-full max-sm:max-w-sm max-h-[80vh] overflow-y-auto bg-white text-slate-800 shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold">🏅 実績リスト</h3>
+                <button onclick="toggleModal('achievement-modal')" class="text-2xl opacity-40 hover:opacity-100 transition">&times;</button>
+            </div>
+            <div id="achievement-grid" class="grid grid-cols-2 gap-3 pb-6"></div>
+        </div>
+    </div>
+
+    <div id="name-modal" class="modal-overlay" onclick="closeOnOverlay(event, 'name-modal')">
+        <div class="card p-8 w-full max-w-xs bg-white text-slate-800 text-center shadow-2xl">
+            <h3 class="font-bold mb-4">なまえを決める</h3>
+            <input type="text" id="name-input" maxlength="10" class="w-full bg-slate-100 border-none rounded-xl p-3 mb-4 text-center outline-none focus:ring-2 focus:ring-yellow-400">
+            <button onclick="saveName()" class="w-full bg-yellow-400 text-white py-3 rounded-xl font-bold hover:bg-yellow-500 transition shadow-md">決定</button>
+        </div>
+    </div>
+
+    <script>
+        // -- Audio Engine with Individual Controls --
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+        let bgmInterval = null;
+        
+        let audioState = {
+            bgmVolume: parseFloat(localStorage.getItem('luna_bgm_vol') || "50"),
+            seVolume: parseFloat(localStorage.getItem('luna_se_vol') || "50")
+        };
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new AudioCtx();
+                startBGM();
+            }
+        }
+
+        function toggleVolumePanel(e, type) {
+            initAudio();
+            e.stopPropagation();
+            
+            const other = type === 'bgm' ? 'se' : 'bgm';
+            document.getElementById(`${other}-panel`).classList.remove('active');
+            document.getElementById(`${other}-trigger`).classList.remove('active');
+            
+            document.getElementById(`${type}-panel`).classList.toggle('active');
+            document.getElementById(`${type}-trigger`).classList.toggle('active');
+        }
+
+        // Close panels when clicking outside
+        window.addEventListener('click', () => {
+            document.getElementById('bgm-panel').classList.remove('active');
+            document.getElementById('se-panel').classList.remove('active');
+            document.getElementById('bgm-trigger').classList.remove('active');
+            document.getElementById('se-trigger').classList.remove('active');
+        });
+
+        function updateVolume(type) {
+            const val = document.getElementById(`${type}-volume`).value;
+            audioState[`${type}Volume`] = parseFloat(val);
+            localStorage.setItem(`luna_${type}_vol`, val);
+            
+            // Visual feedback on triggers
+            const trigger = document.getElementById(`${type}-trigger`);
+            if (audioState[`${type}Volume`] === 0) {
+                trigger.style.opacity = "0.5";
+            } else {
+                trigger.style.opacity = "1";
+            }
+        }
+
+        function playSound(type) {
+            if (audioState.seVolume === 0 || !audioCtx) return;
+            const now = audioCtx.currentTime;
+            const seGainVal = audioState.seVolume / 500; // Base volume adjustment
+            
+            if (type === 'tap') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.exponentialRampToValueAtTime(880, now + 0.1);
+                gain.gain.setValueAtTime(seGainVal, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(); osc.stop(now + 0.1);
+            } else if (type === 'mission') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, now);
+                osc.frequency.exponentialRampToValueAtTime(1046.5, now + 0.2);
+                gain.gain.setValueAtTime(seGainVal, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(); osc.stop(now + 0.3);
+            } else if (type === 'achievement') {
+                [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.connect(gain); gain.connect(audioCtx.destination);
+                    osc.frequency.setValueAtTime(freq, now + i * 0.1);
+                    gain.gain.setValueAtTime(seGainVal * 0.8, now + i * 0.1);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.1 + 0.3);
+                    osc.start(now + i * 0.1); osc.stop(now + i * 0.1 + 0.3);
+                });
+            }
+        }
+
+        function startBGM() {
+            if (bgmInterval) clearInterval(bgmInterval);
+            
+            const playNote = () => {
+                if (audioState.bgmVolume === 0 || !audioCtx) return;
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.type = 'sine';
+
+                let freqs = [261.63, 329.63, 392.00, 523.25]; // C Major default
+                let duration = 3.0;
+                let volume = audioState.bgmVolume / 2000; // Base BGM volume adjustment
+
+                if (state.lastPeriod === 'morning') {
+                    freqs = [880, 1046.5, 1174.7, 1318.5, 1568.0];
+                    duration = 0.5; volume *= 0.5;
+                } else if (state.lastPeriod === 'daytime') {
+                    freqs = [523.25, 659.25, 783.99, 987.77, 1046.5];
+                    duration = 2.0;
+                } else if (state.lastPeriod === 'evening') {
+                    freqs = [349.23, 440.00, 523.25, 659.25, 329.63];
+                    duration = 4.0; volume *= 1.2;
+                } else {
+                    freqs = [130.81, 164.81, 196.00, 261.63];
+                    duration = 6.0; volume *= 1.5;
+                }
+
+                const freq = freqs[Math.floor(Math.random() * freqs.length)];
+                osc.frequency.setValueAtTime(freq, now);
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(volume, now + duration * 0.3);
+                gain.gain.linearRampToValueAtTime(0, now + duration);
+                
+                osc.start();
+                osc.stop(now + duration);
+            };
+
+            const intervalTime = state.lastPeriod === 'morning' ? 1200 : (state.lastPeriod === 'night' ? 4000 : 2500);
+            bgmInterval = setInterval(playNote, intervalTime);
+            playNote();
+        }
+
+        const missionConfig = {
+            morning: { tag: "Morning", start: 5, end: 10, list: ["顔を洗う", "朝ごはんを食べる", "着替える", "朝日を浴びる", "コップ一杯の水を飲む", "鏡を見て笑顔", "窓を開けて換気"], class: "mode-morning", icon: "fa-sun" },
+            daytime: { tag: "Daytime", start: 10, end: 16, list: ["お昼を食べる", "背伸びをする", "お茶で休憩", "机を片付ける", "深呼吸を3回", "午後の予定を確認", "少しだけ歩く"], class: "mode-daytime", icon: "fa-cloud-sun" },
+            evening: { tag: "Evening", start: 16, end: 20, list: ["夕食を味わう", "お風呂に入る", "明日の準備", "今日を振り返る", "カバンを整理する", "大切な人に挨拶", "ゆっくり座る"], class: "mode-evening", icon: "fa-cloud-moon" },
+            night: { tag: "Night", start: 20, end: 5, list: ["歯を磨く", "パジャマに着替える", "ストレッチ", "スマホを置く", "部屋を暗くする", "お疲れ様と唱える", "日記を一行書く"], class: "mode-night", icon: "fa-moon" },
+            daily: { list: ["水を3杯飲む", "本を5ページ読む", "感謝を見つける", "1000歩歩く", "5分間片付け", "新しい発見を1つ"] }
+        };
+
+        const achievements = [
+            { id: 'first', title: 'はじめての一歩', desc: 'ミッションを1つ達成', icon: '🌱' },
+            { id: 'pet_10', title: 'なでなで名人', desc: 'ルナを10回なでる', icon: '💖' },
+            { id: 'pet_100', title: '愛の伝道師', desc: 'ルナを100回なでる', icon: '💎' },
+            { id: 'chick', title: 'ひよこ記念日', desc: 'ひよこに成長させた', icon: '🐥' },
+            { id: 'chicken', title: '立派なニワトリ', desc: 'ニワトリに成長させた', icon: '🐔' },
+            { id: 'perfect', title: 'パーフェクト', desc: '現在のミッションを全達成', icon: '✨' },
+            { id: 'friendship_5', title: '大の仲良し', desc: 'なかよしレベル5達成', icon: '🎀' },
+            { id: 'friendship_10', title: 'ソウルメイト', desc: 'なかよしレベル10達成', icon: '🌌' },
+            { id: 'streak_3', title: '三日坊主卒業', desc: 'ログイン継続3日達成', icon: '🔥' },
+            { id: 'streak_7', title: '一週間のキセキ', desc: 'ログイン継続7日達成', icon: '🌈' },
+            { id: 'streak_chest_3', title: '最初の宝箱', desc: '3日継続ボーナスを獲得', icon: '🎁' },
+            { id: 'streak_chest_7', title: '継続の達人', desc: '1週間継続ボーナスを獲得', icon: '👑' },
+            { id: 'name_change', title: '新しい呼び名', desc: 'なまえを一度変更した', icon: '🏷️' },
+            { id: 'exp_50', title: '成長の盛り', desc: 'EXPが50に到達', icon: '📈' },
+            { id: 'archive_3', title: '思い出コレクター', desc: 'アーカイブに3匹記録', icon: '🖼️' },
+            { id: 'morning_clear', title: '朝の支配者', desc: 'モーニングミッションを完遂', icon: '☀️' },
+            { id: 'night_clear', title: '安眠の守護者', desc: 'ナイトミッションを完遂', icon: '💤' },
+            { id: 'pet_500', title: 'なでなで神', desc: '累計500回なでる', icon: '🙌' },
+            { id: 'daily_3', title: '努力の天才', desc: 'デイリーチャレンジを3つ達成', icon: '🎖️' },
+            { id: 'fortune_daikichi', title: '幸運の持ち主', desc: 'おみくじで大吉を引く', icon: '🧧' },
+            { id: 'fortune_golden_dragon', title: '黄金の守護龍', desc: '大吉かつ「きんいろ」を引き当てる', icon: '🐲' }
+        ];
+
+        const individualColors = {
+            white: { name: "ピュアホワイト", css: "#ffffff" },
+            yellow: { name: "レモンイエロー", css: "#fef08a" },
+            brown: { name: "チョコブラウン", css: "#92400e" },
+            beige: { name: "カスタードベージュ", css: "#fde68a" },
+            black: { name: "ミッドナイトブラック", css: "#1e293b" }
+        };
+
+        const fortuneData = {
+            luck: ["大吉", "中吉", "小吉", "吉", "ルナ吉"],
+            colors: ["あお", "あか", "きいろ", "しろ", "ぴんく", "みどり", "おれんじ", "きんいろ"]
+        };
+
+        const effectChars = ["💖", "✨", "⭐", "🎵", "🍀", "💎", "🌈", "🌸"];
+
+        let state = {
+            name: localStorage.getItem('luna_name') || "ルナ",
+            exp: parseInt(localStorage.getItem('luna_exp') || "0"),
+            friendship: parseInt(localStorage.getItem('luna_friendship') || "0"),
+            completed: JSON.parse(localStorage.getItem('luna_completed') || "[]"),
+            unlocked: JSON.parse(localStorage.getItem('luna_unlocked') || "[]"),
+            archive: JSON.parse(localStorage.getItem('luna_archive') || "[]"),
+            pets: parseInt(localStorage.getItem('luna_pets') || "0"),
+            nameChanges: parseInt(localStorage.getItem('luna_name_changes') || "0"),
+            loginStreak: parseInt(localStorage.getItem('luna_streak') || "1"),
+            lastLogin: localStorage.getItem('luna_last_login') || "",
+            lastFortuneDate: localStorage.getItem('luna_last_fortune') || "",
+            lastFortuneLuck: localStorage.getItem('luna_last_fortune_luck') || "",
+            lastFortuneColor: localStorage.getItem('luna_last_fortune_color') || "",
+            individualSize: parseFloat(localStorage.getItem('luna_ind_size') || (0.9 + Math.random() * 0.25).toFixed(2)),
+            individualColor: localStorage.getItem('luna_ind_color') || Object.keys(individualColors)[Math.floor(Math.random() * 5)],
+            lastPeriod: "",
+            loginTime: Date.now()
+        };
+
+        const EXP_PER_MISSION = 10;
+        const FRIENDSHIP_PER_ACTION = 5;
+
+        // -- Clock --
+        function initClockFace() {
+            const container = document.getElementById('analog-clock-marks');
+            if (!container) return;
+            container.innerHTML = '';
+            for (let i = 0; i < 12; i++) {
+                const mark = document.createElement('div');
+                mark.className = 'clock-mark';
+                mark.style.transform = `rotate(${i * 30}deg)`;
+                container.appendChild(mark);
+            }
+        }
+
+        function updateClock() {
+            const now = new Date();
+            const h = (now.getHours() % 12) * 30 + now.getMinutes() * 0.5;
+            const m = now.getMinutes() * 6;
+            const hourHand = document.getElementById('hour-hand');
+            const minHand = document.getElementById('min-hand');
+            if (hourHand) hourHand.style.transform = `rotate(${h}deg)`;
+            if (minHand) minHand.style.transform = `rotate(${m}deg)`;
+            
+            const hours = now.getHours();
+            let period = "night";
+            if (hours >= 5 && hours < 10) period = "morning";
+            else if (hours >= 10 && hours < 16) period = "daytime";
+            else if (hours >= 16 && hours < 20) period = "evening";
+
+            if (state.lastPeriod !== period) {
+                const prevPeriod = state.lastPeriod;
+                state.lastPeriod = period;
+                document.body.className = `p-4 ${missionConfig[period].class}`;
+                document.getElementById('period-tag').innerText = missionConfig[period].tag;
+                document.getElementById('period-display').innerText = `${missionConfig[period].tag} Missions`;
+                const logoIcon = document.querySelector('.logo-icon i');
+                if (logoIcon) logoIcon.className = `fa-solid ${missionConfig[period].icon || 'fa-egg'}`;
+                renderMissions();
+                if (audioCtx && prevPeriod) startBGM();
+            }
+            
+            const target = new Date(now);
+            target.setHours(missionConfig[period].end, 0, 0, 0);
+            if (period === "night" && hours >= 20) target.setDate(target.getDate() + 1);
+            const diff = target - now;
+            const th = Math.floor(diff / 3600000);
+            const tm = Math.floor((diff % 3600000) / 60000);
+            const ts = Math.floor((diff % 60000) / 1000);
+            document.getElementById('timer-display').innerText = `${String(th).padStart(2,'0')}:${String(tm).padStart(2,'0')}:${String(ts).padStart(2,'0')}`;
+        }
+
+        // -- Login & Fortune Logic --
+        function initLogin() {
+            const today = new Date().toLocaleDateString();
+            if (state.lastLogin !== today) {
+                if (state.lastLogin) {
+                    archiveCurrentPet();
+                    const lastDate = new Date(state.lastLogin);
+                    const diffDays = Math.floor((new Date() - lastDate) / (1000 * 60 * 60 * 24));
+                    if (diffDays === 1) { state.loginStreak++; checkStreakChest(); }
+                    else if (diffDays > 1) { state.loginStreak = 1; }
+                    resetPetForNewDay();
+                }
+                state.lastLogin = today;
+                state.completed = [];
+                save();
+            }
+            document.getElementById('streak-num').innerText = state.loginStreak;
+            checkFortune();
+        }
+
+        function checkFortune() {
+            const today = new Date().toLocaleDateString();
+            const fortuneEl = document.getElementById('fortune-text');
+            
+            if (state.lastFortuneDate !== today || !state.lastFortuneLuck || !state.lastFortuneColor) {
+                const luck = fortuneData.luck[Math.floor(Math.random() * fortuneData.luck.length)];
+                const color = fortuneData.colors[Math.floor(Math.random() * fortuneData.colors.length)];
+                
+                state.lastFortuneDate = today;
+                state.lastFortuneLuck = luck;
+                state.lastFortuneColor = color;
+                save();
+            }
+            
+            fortuneEl.innerText = `今日の運勢：【${state.lastFortuneLuck}】！ ラッキーカラー：【${state.lastFortuneColor}】`;
+            checkAchievements();
+        }
+
+        function archiveCurrentPet() {
+            let sprite = state.exp >= 75 ? "🐔" : (state.exp >= 25 ? "🐥" : "🥚");
+            state.archive.unshift({ name: state.name, sprite: sprite, color: state.individualColor, size: state.individualSize, exp: state.exp, date: state.lastLogin });
+        }
+
+        function resetPetForNewDay() {
+            state.exp = 0; 
+            state.friendship = Math.floor(state.friendship * 0.9); 
+            state.individualSize = parseFloat((0.9 + Math.random() * 0.25).toFixed(2));
+            state.individualColor = Object.keys(individualColors)[Math.floor(Math.random() * 5)];
+        }
+
+        function checkStreakChest() {
+            let bonusExp = 0, bonusFriend = 0, message = "", achId = "";
+            if (state.loginStreak === 3) { bonusExp = 30; bonusFriend = 50; message = "三日坊主卒業！宝箱からEXP+30!"; achId = "streak_chest_3"; }
+            if (state.loginStreak === 7) { bonusExp = 50; bonusFriend = 100; message = "1週間継続！宝箱からEXP+50!"; achId = "streak_chest_7"; }
+            if (message) { 
+                state.exp = Math.min(state.exp + bonusExp, 100); 
+                state.friendship += bonusFriend; 
+                document.getElementById('pet-message').innerText = message; 
+                if (achId) unlock(achId); 
+                save(); 
+                updatePet(); 
+            }
+        }
+
+        // -- Interaction Handlers --
+        function playEffect(isMission = false, x, y) {
+            const pet = document.getElementById('pet');
+            if (!pet) return;
+            pet.classList.remove('floating', 'jump-anim', 'spin-anim');
+            void pet.offsetWidth;
+            const fLevel = Math.floor(state.friendship / 100) + 1;
+            if (fLevel >= 3) pet.classList.add('spin-anim');
+            else pet.classList.add('jump-anim');
+            setTimeout(() => { pet.classList.remove('jump-anim', 'spin-anim'); pet.classList.add('floating'); }, 600);
+            
+            if (x === undefined || y === undefined) { 
+                const rect = pet.getBoundingClientRect(); 
+                x = rect.left + rect.width / 2; 
+                y = rect.top + rect.height / 2; 
+            }
+            createParticles(isMission, x, y);
+            if (isMission) playSound('mission');
+            else playSound('tap');
+
+            const quotes = isMission ? ["やったね！すごいよ！", "キラキラしてるよ！"] : ["なでてくれてありがとう！", "きもちいい〜"];
+            document.getElementById('pet-message').innerText = quotes[Math.floor(Math.random() * quotes.length)];
+        }
+
+        function createParticles(isMission, x, y) {
+            const count = isMission ? 12 : 6;
+            for(let i=0; i < count; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                p.innerText = isMission ? "⭐" : effectChars[Math.floor(Math.random() * effectChars.length)];
+                p.style.left = `${x}px`; p.style.top = `${y}px`;
+                const tx = (Math.random() - 0.5) * 250, ty = (Math.random() - 0.5) * 250 - 50, tr = (Math.random() - 0.5) * 360;
+                p.style.setProperty('--tx', `${tx}px`); p.style.setProperty('--ty', `${ty}px`); p.style.setProperty('--tr', `${tr}deg`);
+                document.body.appendChild(p); setTimeout(() => p.remove(), 800);
+            }
+        }
+
+        function toggleMission(name, isDaily) {
+            const idx = state.completed.indexOf(name);
+            if (idx === -1) { state.completed.push(name); state.exp = Math.min(state.exp + EXP_PER_MISSION, 100); state.friendship += FRIENDSHIP_PER_ACTION * 2; playEffect(true); }
+            else { state.completed.splice(idx, 1); state.exp = Math.max(state.exp - EXP_PER_MISSION, 0); }
+            save(); renderMissions(); updatePet(); checkAchievements();
+        }
+
+        function onPetTap(event) { state.pets++; state.friendship += FRIENDSHIP_PER_ACTION; save(); playEffect(false, event?.clientX, event?.clientY); updatePet(); checkAchievements(); }
+
+        function updatePet() {
+            let s = "🥚", level = 1, growthInfo = "", stageClass = "stage-egg";
+            if (state.exp >= 75) { s = "🐔"; level = 3; growthInfo = "立派に育ったね！"; stageClass = "stage-chicken"; }
+            else if (state.exp >= 25) { s = "🐥"; level = 2; growthInfo = `あと ${75 - state.exp} EXPで成長`; stageClass = "stage-chick"; }
+            else { s = "🥚"; level = 1; growthInfo = `あと ${25 - state.exp} EXPで成長`; stageClass = "stage-egg"; }
+            
+            const statsCard = document.getElementById('stats-card');
+            statsCard.classList.remove('stage-egg', 'stage-chick', 'stage-chicken');
+            statsCard.classList.add(stageClass);
+            
+            const fLevel = Math.floor(state.friendship / 100) + 1;
+            const fProgress = state.friendship % 100;
+            const petEl = document.getElementById('pet');
+            if (petEl) {
+                petEl.innerText = s;
+                let finalScale = ((1 + (state.exp / 150)) * state.individualSize).toFixed(2);
+                petEl.style.setProperty('--base-scale', finalScale);
+                petEl.style.transform = `scale(${finalScale})`;
+                petEl.style.color = individualColors[state.individualColor]?.css || "#ffffff";
+            }
+            document.getElementById('status-icon').innerText = s;
+            document.getElementById('growth-fill').style.width = `${state.exp}%`;
+            document.getElementById('friendship-fill').style.width = `${fProgress}%`;
+            document.getElementById('friend-level').innerText = fLevel;
+            document.getElementById('level-display').innerText = level;
+            document.getElementById('growth-status').innerText = growthInfo;
+            document.getElementById('pet-traits-detail').innerText = `${individualColors[state.individualColor]?.name} / ${state.individualSize < 0.95 ? 'ちいさい' : (state.individualSize > 1.1 ? 'おおきい' : 'ふつう')}`;
+            document.getElementById('pet-name').innerText = state.name;
+        }
+
+        function checkAchievements() {
+            if (state.completed.length >= 1) unlock('first');
+            if (state.pets >= 10) unlock('pet_10');
+            if (state.pets >= 100) unlock('pet_100');
+            if (state.pets >= 500) unlock('pet_500');
+            if (state.exp >= 25) unlock('chick');
+            if (state.exp >= 50) unlock('exp_50');
+            if (state.exp >= 75) unlock('chicken');
+            if (Math.floor(state.friendship / 100) + 1 >= 5) unlock('friendship_5');
+            if (Math.floor(state.friendship / 100) + 1 >= 10) unlock('friendship_10');
+            if (state.loginStreak >= 3) unlock('streak_3');
+            if (state.loginStreak >= 7) unlock('streak_7');
+            if (state.nameChanges > 0) unlock('name_change');
+            if (state.archive.length >= 3) unlock('archive_3');
+            if (state.lastFortuneLuck === "大吉") unlock('fortune_daikichi');
+            if (state.lastFortuneLuck === "大吉" && state.lastFortuneColor === "きんいろ") unlock('fortune_golden_dragon');
+            if (state.lastPeriod === 'morning' && missionConfig.morning.list.every(m => state.completed.includes(m))) unlock('morning_clear');
+            if (state.lastPeriod === 'night' && missionConfig.night.list.every(m => state.completed.includes(m))) unlock('night_clear');
+            if (state.lastPeriod && missionConfig[state.lastPeriod].list.every(m => state.completed.includes(m))) unlock('perfect');
+            const dailyCount = missionConfig.daily.list.filter(m => state.completed.includes(m)).length;
+            if (dailyCount >= 3) unlock('daily_3');
+        }
+
+        function unlock(id) {
+            if (state.unlocked.includes(id)) return;
+            state.unlocked.push(id); save();
+            const ach = achievements.find(a => a.id === id);
+            if (!ach) return;
+            playSound('achievement');
+            const pop = document.getElementById('achievement-popup');
+            document.getElementById('pop-icon').innerText = ach.icon;
+            document.getElementById('pop-title').innerText = ach.title;
+            pop.style.opacity = "1"; pop.style.transform = "translateX(-50%) translateY(0)";
+            setTimeout(() => { pop.style.opacity = "0"; pop.style.transform = "translateX(-50%) translateY(-100px)"; }, 4000);
+        }
+
+        function renderMissions() {
+            const list = document.getElementById('mission-list'), daily = document.getElementById('daily-list');
+            if (!list || !daily || !state.lastPeriod) return;
+            const createItem = (m, isDaily) => {
+                const done = state.completed.includes(m);
+                return `<div class="mission-item ${done ? 'completed' : ''}" onclick="toggleMission('${m}', ${isDaily})">
+                    <div class="w-5 h-5 rounded-full border-2 ${isDaily ? 'border-green-400' : 'border-yellow-400'} flex items-center justify-center flex-shrink-0">
+                        ${done ? `<i class="fa-solid fa-check text-[10px] ${isDaily ? 'text-green-500' : 'text-yellow-500'}"></i>` : ''}
+                    </div>
+                    <span class="text-sm font-bold">${m}</span>
+                </div>`;
+            };
+            list.innerHTML = missionConfig[state.lastPeriod].list.map(m => createItem(m, false)).join('');
+            daily.innerHTML = missionConfig.daily.list.map(m => createItem(m, true)).join('');
+        }
+
+        function renderAchievements() {
+            const grid = document.getElementById('achievement-grid');
+            grid.innerHTML = achievements.map(ach => {
+                const isUnlocked = state.unlocked.includes(ach.id);
+                return `<div class="achievement-grid-item ${isUnlocked ? 'unlocked' : 'locked'}">
+                    <div class="text-2xl">${isUnlocked ? ach.icon : '❓'}</div>
+                    <div class="text-[10px] font-bold">${isUnlocked ? ach.title : '？？？'}</div>
+                    <div class="text-[8px] opacity-60 leading-tight">${isUnlocked ? ach.desc : '条件を満たすと解除'}</div>
+                </div>`;
+            }).join('');
+        }
+
+        function renderArchive() {
+            const list = document.getElementById('archive-list');
+            list.innerHTML = state.archive.map(item => `<div class="flex flex-col items-center flex-shrink-0">
+                <div class="w-16 h-16 bg-white/40 rounded-2xl flex items-center justify-center border border-white/20 shadow-sm overflow-hidden" style="color: ${individualColors[item.color]?.css};">
+                    <span class="text-2xl" style="transform: scale(${item.size});">${item.sprite}</span>
+                </div>
+            </div>`).join('');
+        }
+
+        function toggleModal(id) { document.getElementById(id).classList.toggle('active'); if(id==='achievement-modal') renderAchievements(); }
+        function closeOnOverlay(e, id) { if (e.target.id === id) toggleModal(id); }
+        function openNameModal() { document.getElementById('name-input').value = state.name; toggleModal('name-modal'); }
+        function saveName() { const val = document.getElementById('name-input').value.trim(); if (val) { state.name = val; state.nameChanges++; save(); updatePet(); toggleModal('name-modal'); checkAchievements(); } }
+
+        function save() {
+            const keys = ['name', 'exp', 'friendship', 'pets', 'nameChanges', 'lastLogin', 'lastFortuneDate', 'lastFortuneLuck', 'lastFortuneColor', 'individualSize', 'individualColor', 'loginStreak'];
+            keys.forEach(k => localStorage.setItem('luna_' + k, state[k]));
+            localStorage.setItem('luna_completed', JSON.stringify(state.completed));
+            localStorage.setItem('luna_unlocked', JSON.stringify(state.unlocked));
+            localStorage.setItem('luna_archive', JSON.stringify(state.archive));
+            renderArchive(); 
+        }
+
+        window.onload = () => {
+            initClockFace(); 
+            updateClock(); 
+            initLogin();
+            setInterval(updateClock, 1000);
+            updatePet(); 
+            renderArchive();
+            
+            // Sync Audio UI
+            document.getElementById('bgm-volume').value = audioState.bgmVolume;
+            document.getElementById('se-volume').value = audioState.seVolume;
+            updateVolume('bgm');
+            updateVolume('se');
+        };
+    </script>
+</body>
+</html>
