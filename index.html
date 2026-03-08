@@ -37,14 +37,29 @@
         .mode-evening { background: var(--bg-evening); }
         .mode-night { background: var(--bg-night); color: #ecf0f1; }
 
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding: 0 4px;
+            gap: 12px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
         .app-logo {
             font-family: 'Fredoka', sans-serif;
             display: flex;
             align-items: center;
             gap: 8px;
-            margin-bottom: 12px;
-            padding-left: 4px;
+            flex-shrink: 0;
         }
+
         .logo-icon {
             width: 24px;
             height: 24px;
@@ -57,6 +72,23 @@
             font-size: 14px;
         }
         .mode-night .logo-icon { background: #6366f1; }
+
+        /* Clock style adjustment for header */
+        .analog-clock-mini {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(4px);
+            position: relative;
+            border: 1.5px solid rgba(255, 255, 255, 0.5);
+            flex-shrink: 0;
+        }
+        .mode-night .analog-clock-mini { background: rgba(0, 0, 0, 0.2); border-color: rgba(255, 255, 255, 0.2); }
+        
+        .hand { position: absolute; bottom: 50%; left: 50%; transform-origin: bottom; background: currentColor; border-radius: 4px; z-index: 20; }
+        .hour-hand { width: 2px; height: 8px; margin-left: -1px; }
+        .min-hand { width: 1.5px; height: 12px; margin-left: -0.75px; }
 
         .card {
             background: rgba(255, 255, 255, 0.85);
@@ -191,29 +223,6 @@
         }
         .modal-overlay.active { opacity: 1; pointer-events: auto; }
 
-        .analog-clock-container { position: fixed; top: 20px; left: 20px; width: 60px; height: 60px; z-index: 50; }
-        .analog-clock { width: 100%; height: 100%; border-radius: 50%; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(4px); position: relative; border: 2px solid rgba(255, 255, 255, 0.4); }
-        .hand { position: absolute; bottom: 50%; left: 50%; transform-origin: bottom; background: white; border-radius: 4px; z-index: 20; }
-        .hour-hand { width: 3px; height: 15px; margin-left: -1.5px; }
-        .min-hand { width: 2px; height: 22px; margin-left: -1px; }
-
-        .clock-marks-container {
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            z-index: 10;
-        }
-
-        .clock-mark {
-            position: absolute;
-            top: 2px; 
-            left: calc(50% - 1px);
-            width: 2px;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.7);
-            transform-origin: 1px 26px;
-        }
-
         .friendship-bar { height: 4px; background: rgba(0,0,0,0.05); border-radius: 2px; margin-top: 4px; overflow: hidden; }
         .friendship-fill { height: 100%; background: #f472b6; transition: width 0.5s ease; }
 
@@ -232,20 +241,16 @@
         @keyframes bounce-subtle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
         .animate-bounce-subtle { animation: bounce-subtle 2s infinite ease-in-out; }
 
-        /* Separate Audio Controls UI */
+        /* Audio Controls UI */
         .audio-controls-group {
-            position: fixed;
-            top: 20px;
-            right: 20px;
             display: flex;
-            gap: 10px;
-            z-index: 100;
+            gap: 8px;
         }
 
         .audio-trigger {
-            width: 44px;
-            height: 44px;
-            background: rgba(255, 255, 255, 0.2);
+            width: 32px;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.25);
             backdrop-filter: blur(4px);
             border-radius: 50%;
             display: flex;
@@ -253,13 +258,13 @@
             justify-content: center;
             cursor: pointer;
             border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            font-size: 1.1rem;
+            color: inherit;
+            font-size: 0.8rem;
             transition: all 0.2s;
             position: relative;
         }
         .audio-trigger:active { transform: scale(0.9); }
-        .audio-trigger.active { background: rgba(255, 255, 255, 0.4); }
+        .audio-trigger.active { background: rgba(255, 255, 255, 0.4); border-color: white; }
 
         .volume-panel-mini {
             background: rgba(255, 255, 255, 0.95);
@@ -269,7 +274,7 @@
             width: 140px;
             display: none;
             position: absolute;
-            top: 55px;
+            top: 40px;
             right: 0;
             z-index: 110;
             color: #334155;
@@ -292,42 +297,43 @@
         </div>
     </div>
 
-    <div class="analog-clock-container">
-        <div class="analog-clock">
-            <div class="clock-marks-container" id="analog-clock-marks"></div>
-            <div id="hour-hand" class="hand hour-hand"></div>
-            <div id="min-hand" class="hand min-hand"></div>
-        </div>
-    </div>
-
-    <!-- Separate Audio Settings Buttons -->
-    <div class="audio-controls-group">
-        <!-- BGM Control -->
-        <div class="audio-trigger" id="bgm-trigger" onclick="toggleVolumePanel(event, 'bgm')">
-            <i class="fas fa-music"></i>
-            <div id="bgm-panel" class="volume-panel-mini" onclick="event.stopPropagation()">
-                <div class="slider-group-mini">
-                    <label>BGM Volume</label>
-                    <input type="range" id="bgm-volume" min="0" max="100" step="1" oninput="updateVolume('bgm')">
-                </div>
-            </div>
-        </div>
-        <!-- SE Control -->
-        <div class="audio-trigger" id="se-trigger" onclick="toggleVolumePanel(event, 'se')">
-            <i class="fas fa-bolt"></i>
-            <div id="se-panel" class="volume-panel-mini" onclick="event.stopPropagation()">
-                <div class="slider-group-mini">
-                    <label>SE Volume</label>
-                    <input type="range" id="se-volume" min="0" max="100" step="1" oninput="updateVolume('se')">
-                </div>
-            </div>
-        </div>
-    </div>
-
     <div class="max-w-md w-full relative z-10 space-y-4" id="app-container">
-        <div class="app-logo">
-            <div class="logo-icon"><i class="fa-solid fa-egg"></i></div>
-            <span class="app-name">Pocket Buddy</span>
+        <!-- Header with Logo, Clock and Audio Controls -->
+        <div class="app-header">
+            <div class="header-left">
+                <div class="app-logo">
+                    <div class="logo-icon"><i class="fa-solid fa-egg"></i></div>
+                    <span class="app-name">Pocket Buddy</span>
+                </div>
+                <!-- Clock moved to here -->
+                <div class="analog-clock-mini">
+                    <div id="hour-hand" class="hand hour-hand"></div>
+                    <div id="min-hand" class="hand min-hand"></div>
+                </div>
+            </div>
+
+            <div class="audio-controls-group">
+                <!-- BGM Control -->
+                <div class="audio-trigger" id="bgm-trigger" onclick="toggleVolumePanel(event, 'bgm')">
+                    <i class="fas fa-music"></i>
+                    <div id="bgm-panel" class="volume-panel-mini" onclick="event.stopPropagation()">
+                        <div class="slider-group-mini">
+                            <label>BGM Volume</label>
+                            <input type="range" id="bgm-volume" min="0" max="100" step="1" oninput="updateVolume('bgm')">
+                        </div>
+                    </div>
+                </div>
+                <!-- SE Control -->
+                <div class="audio-trigger" id="se-trigger" onclick="toggleVolumePanel(event, 'se')">
+                    <i class="fas fa-bolt"></i>
+                    <div id="se-panel" class="volume-panel-mini" onclick="event.stopPropagation()">
+                        <div class="slider-group-mini">
+                            <label>SE Volume</label>
+                            <input type="range" id="se-volume" min="0" max="100" step="1" oninput="updateVolume('se')">
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="card p-5" id="stats-card">
@@ -412,7 +418,7 @@
     </div>
 
     <script>
-        // -- Audio Engine with Individual Controls --
+        // -- Audio Engine --
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         let audioCtx = null;
         let bgmInterval = null;
@@ -441,32 +447,38 @@
             document.getElementById(`${type}-trigger`).classList.toggle('active');
         }
 
-        // Close panels when clicking outside
         window.addEventListener('click', () => {
-            document.getElementById('bgm-panel').classList.remove('active');
-            document.getElementById('se-panel').classList.remove('active');
-            document.getElementById('bgm-trigger').classList.remove('active');
-            document.getElementById('se-trigger').classList.remove('active');
+            const bp = document.getElementById('bgm-panel');
+            const sp = document.getElementById('se-panel');
+            const bt = document.getElementById('bgm-trigger');
+            const st = document.getElementById('se-trigger');
+            if (bp) bp.classList.remove('active');
+            if (sp) sp.classList.remove('active');
+            if (bt) bt.classList.remove('active');
+            if (st) st.classList.remove('active');
         });
 
         function updateVolume(type) {
-            const val = document.getElementById(`${type}-volume`).value;
+            const input = document.getElementById(`${type}-volume`);
+            if (!input) return;
+            const val = input.value;
             audioState[`${type}Volume`] = parseFloat(val);
             localStorage.setItem(`luna_${type}_vol`, val);
             
-            // Visual feedback on triggers
             const trigger = document.getElementById(`${type}-trigger`);
-            if (audioState[`${type}Volume`] === 0) {
-                trigger.style.opacity = "0.5";
-            } else {
-                trigger.style.opacity = "1";
+            if (trigger) {
+                if (audioState[`${type}Volume`] === 0) {
+                    trigger.style.opacity = "0.5";
+                } else {
+                    trigger.style.opacity = "1";
+                }
             }
         }
 
         function playSound(type) {
             if (audioState.seVolume === 0 || !audioCtx) return;
             const now = audioCtx.currentTime;
-            const seGainVal = audioState.seVolume / 500; // Base volume adjustment
+            const seGainVal = audioState.seVolume / 500;
             
             if (type === 'tap') {
                 const osc = audioCtx.createOscillator();
@@ -514,9 +526,9 @@
                 osc.connect(gain); gain.connect(audioCtx.destination);
                 osc.type = 'sine';
 
-                let freqs = [261.63, 329.63, 392.00, 523.25]; // C Major default
+                let freqs = [261.63, 329.63, 392.00, 523.25];
                 let duration = 3.0;
-                let volume = audioState.bgmVolume / 2000; // Base BGM volume adjustment
+                let volume = audioState.bgmVolume / 2000;
 
                 if (state.lastPeriod === 'morning') {
                     freqs = [880, 1046.5, 1174.7, 1318.5, 1568.0];
@@ -617,19 +629,7 @@
         const EXP_PER_MISSION = 10;
         const FRIENDSHIP_PER_ACTION = 5;
 
-        // -- Clock --
-        function initClockFace() {
-            const container = document.getElementById('analog-clock-marks');
-            if (!container) return;
-            container.innerHTML = '';
-            for (let i = 0; i < 12; i++) {
-                const mark = document.createElement('div');
-                mark.className = 'clock-mark';
-                mark.style.transform = `rotate(${i * 30}deg)`;
-                container.appendChild(mark);
-            }
-        }
-
+        // -- Clock Logic --
         function updateClock() {
             const now = new Date();
             const h = (now.getHours() % 12) * 30 + now.getMinutes() * 0.5;
@@ -649,8 +649,10 @@
                 const prevPeriod = state.lastPeriod;
                 state.lastPeriod = period;
                 document.body.className = `p-4 ${missionConfig[period].class}`;
-                document.getElementById('period-tag').innerText = missionConfig[period].tag;
-                document.getElementById('period-display').innerText = `${missionConfig[period].tag} Missions`;
+                const tag = document.getElementById('period-tag');
+                const display = document.getElementById('period-display');
+                if (tag) tag.innerText = missionConfig[period].tag;
+                if (display) display.innerText = `${missionConfig[period].tag} Missions`;
                 const logoIcon = document.querySelector('.logo-icon i');
                 if (logoIcon) logoIcon.className = `fa-solid ${missionConfig[period].icon || 'fa-egg'}`;
                 renderMissions();
@@ -664,10 +666,10 @@
             const th = Math.floor(diff / 3600000);
             const tm = Math.floor((diff % 3600000) / 60000);
             const ts = Math.floor((diff % 60000) / 1000);
-            document.getElementById('timer-display').innerText = `${String(th).padStart(2,'0')}:${String(tm).padStart(2,'0')}:${String(ts).padStart(2,'0')}`;
+            const timerDisplay = document.getElementById('timer-display');
+            if (timerDisplay) timerDisplay.innerText = `${String(th).padStart(2,'0')}:${String(tm).padStart(2,'0')}:${String(ts).padStart(2,'0')}`;
         }
 
-        // -- Login & Fortune Logic --
         function initLogin() {
             const today = new Date().toLocaleDateString();
             if (state.lastLogin !== today) {
@@ -683,25 +685,21 @@
                 state.completed = [];
                 save();
             }
-            document.getElementById('streak-num').innerText = state.loginStreak;
+            const streakNum = document.getElementById('streak-num');
+            if (streakNum) streakNum.innerText = state.loginStreak;
             checkFortune();
         }
 
         function checkFortune() {
             const today = new Date().toLocaleDateString();
             const fortuneEl = document.getElementById('fortune-text');
-            
             if (state.lastFortuneDate !== today || !state.lastFortuneLuck || !state.lastFortuneColor) {
-                const luck = fortuneData.luck[Math.floor(Math.random() * fortuneData.luck.length)];
-                const color = fortuneData.colors[Math.floor(Math.random() * fortuneData.colors.length)];
-                
                 state.lastFortuneDate = today;
-                state.lastFortuneLuck = luck;
-                state.lastFortuneColor = color;
+                state.lastFortuneLuck = fortuneData.luck[Math.floor(Math.random() * fortuneData.luck.length)];
+                state.lastFortuneColor = fortuneData.colors[Math.floor(Math.random() * fortuneData.colors.length)];
                 save();
             }
-            
-            fortuneEl.innerText = `今日の運勢：【${state.lastFortuneLuck}】！ ラッキーカラー：【${state.lastFortuneColor}】`;
+            if (fortuneEl) fortuneEl.innerText = `今日の運勢：【${state.lastFortuneLuck}】！ ラッキーカラー：【${state.lastFortuneColor}】`;
             checkAchievements();
         }
 
@@ -724,14 +722,14 @@
             if (message) { 
                 state.exp = Math.min(state.exp + bonusExp, 100); 
                 state.friendship += bonusFriend; 
-                document.getElementById('pet-message').innerText = message; 
+                const msgEl = document.getElementById('pet-message');
+                if (msgEl) msgEl.innerText = message; 
                 if (achId) unlock(achId); 
                 save(); 
                 updatePet(); 
             }
         }
 
-        // -- Interaction Handlers --
         function playEffect(isMission = false, x, y) {
             const pet = document.getElementById('pet');
             if (!pet) return;
@@ -750,9 +748,8 @@
             createParticles(isMission, x, y);
             if (isMission) playSound('mission');
             else playSound('tap');
-
-            const quotes = isMission ? ["やったね！すごいよ！", "キラキラしてるよ！"] : ["なでてくれてありがとう！", "きもちいい〜"];
-            document.getElementById('pet-message').innerText = quotes[Math.floor(Math.random() * quotes.length)];
+            const msgEl = document.getElementById('pet-message');
+            if (msgEl) msgEl.innerText = isMission ? "やったね！すごいよ！" : "なでてくれてありがとう！";
         }
 
         function createParticles(isMission, x, y) {
@@ -784,8 +781,10 @@
             else { s = "🥚"; level = 1; growthInfo = `あと ${25 - state.exp} EXPで成長`; stageClass = "stage-egg"; }
             
             const statsCard = document.getElementById('stats-card');
-            statsCard.classList.remove('stage-egg', 'stage-chick', 'stage-chicken');
-            statsCard.classList.add(stageClass);
+            if (statsCard) {
+                statsCard.classList.remove('stage-egg', 'stage-chick', 'stage-chicken');
+                statsCard.classList.add(stageClass);
+            }
             
             const fLevel = Math.floor(state.friendship / 100) + 1;
             const fProgress = state.friendship % 100;
@@ -839,8 +838,10 @@
             const pop = document.getElementById('achievement-popup');
             document.getElementById('pop-icon').innerText = ach.icon;
             document.getElementById('pop-title').innerText = ach.title;
-            pop.style.opacity = "1"; pop.style.transform = "translateX(-50%) translateY(0)";
-            setTimeout(() => { pop.style.opacity = "0"; pop.style.transform = "translateX(-50%) translateY(-100px)"; }, 4000);
+            if (pop) {
+                pop.style.opacity = "1"; pop.style.transform = "translateX(-50%) translateY(0)";
+                setTimeout(() => { pop.style.opacity = "0"; pop.style.transform = "translateX(-50%) translateY(-100px)"; }, 4000);
+            }
         }
 
         function renderMissions() {
@@ -861,6 +862,7 @@
 
         function renderAchievements() {
             const grid = document.getElementById('achievement-grid');
+            if (!grid) return;
             grid.innerHTML = achievements.map(ach => {
                 const isUnlocked = state.unlocked.includes(ach.id);
                 return `<div class="achievement-grid-item ${isUnlocked ? 'unlocked' : 'locked'}">
@@ -873,6 +875,7 @@
 
         function renderArchive() {
             const list = document.getElementById('archive-list');
+            if (!list) return;
             list.innerHTML = state.archive.map(item => `<div class="flex flex-col items-center flex-shrink-0">
                 <div class="w-16 h-16 bg-white/40 rounded-2xl flex items-center justify-center border border-white/20 shadow-sm overflow-hidden" style="color: ${individualColors[item.color]?.css};">
                     <span class="text-2xl" style="transform: scale(${item.size});">${item.sprite}</span>
@@ -880,10 +883,20 @@
             </div>`).join('');
         }
 
-        function toggleModal(id) { document.getElementById(id).classList.toggle('active'); if(id==='achievement-modal') renderAchievements(); }
+        function toggleModal(id) { 
+            const el = document.getElementById(id);
+            if (el) el.classList.toggle('active'); 
+            if(id==='achievement-modal') renderAchievements(); 
+        }
         function closeOnOverlay(e, id) { if (e.target.id === id) toggleModal(id); }
-        function openNameModal() { document.getElementById('name-input').value = state.name; toggleModal('name-modal'); }
-        function saveName() { const val = document.getElementById('name-input').value.trim(); if (val) { state.name = val; state.nameChanges++; save(); updatePet(); toggleModal('name-modal'); checkAchievements(); } }
+        function openNameModal() { 
+            document.getElementById('name-input').value = state.name; 
+            toggleModal('name-modal'); 
+        }
+        function saveName() { 
+            const val = document.getElementById('name-input').value.trim(); 
+            if (val) { state.name = val; state.nameChanges++; save(); updatePet(); toggleModal('name-modal'); checkAchievements(); } 
+        }
 
         function save() {
             const keys = ['name', 'exp', 'friendship', 'pets', 'nameChanges', 'lastLogin', 'lastFortuneDate', 'lastFortuneLuck', 'lastFortuneColor', 'individualSize', 'individualColor', 'loginStreak'];
@@ -895,14 +908,12 @@
         }
 
         window.onload = () => {
-            initClockFace(); 
             updateClock(); 
             initLogin();
             setInterval(updateClock, 1000);
             updatePet(); 
             renderArchive();
             
-            // Sync Audio UI
             document.getElementById('bgm-volume').value = audioState.bgmVolume;
             document.getElementById('se-volume').value = audioState.seVolume;
             updateVolume('bgm');
